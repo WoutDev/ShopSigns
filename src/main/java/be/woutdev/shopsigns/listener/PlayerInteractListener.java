@@ -6,6 +6,7 @@ import be.woutdev.economy.api.transaction.Transaction;
 import be.woutdev.economy.api.transaction.TransactionType;
 import be.woutdev.shopsigns.model.ShopSign;
 import be.woutdev.shopsigns.model.ShopSign.ShopSignType;
+import java.math.BigDecimal;
 import java.util.Iterator;
 import org.bukkit.ChatColor;
 import org.bukkit.block.Block;
@@ -82,7 +83,16 @@ public class PlayerInteractListener implements Listener {
                     return;
                 }
 
-                int toRemove = sign.getAmount();
+                int toRemove = 0;
+
+                if (e.getPlayer().isSneaking())
+                {
+                    toRemove = amountPlayerHas;
+                }
+                else
+                {
+                    toRemove = sign.getAmount();
+                }
 
                 Iterator<ItemStack> it = e.getPlayer().getInventory().iterator();
 
@@ -122,13 +132,20 @@ public class PlayerInteractListener implements Listener {
 
                 e.getPlayer().updateInventory();
 
-                Transaction transaction = EconomyAPI.getAPI().createTransaction(account, TransactionType.DEPOSIT, sign.getPrice());
+                Transaction transaction = EconomyAPI.getAPI().createTransaction(account,
+                    TransactionType.DEPOSIT,
+                    e.getPlayer().isSneaking()
+                        ? ((sign.getPrice().divide(new BigDecimal(sign.getAmount())).multiply(new BigDecimal(amountPlayerHas))))
+                        : sign.getPrice());
+
+                int finalAmountPlayerHas = amountPlayerHas;
 
                 EconomyAPI.getAPI().transact(transaction).addListener((t) -> {
                     switch(t.getResult().getStatus())
                     {
                         case SUCCESS:
-                            e.getPlayer().sendMessage(ChatColor.GREEN + "Successfully sold " + sign.getAmount() + "x " + sign.getMaterial().name() + " for " + EconomyAPI.getAPI().format(sign.getPrice()));
+                            e.getPlayer().sendMessage(ChatColor.GREEN + "Successfully sold " + (e.getPlayer().isSneaking() ? finalAmountPlayerHas
+                                : sign.getAmount()) + "x " + sign.getMaterial().name() + " for " + EconomyAPI.getAPI().format(e.getPlayer().isSneaking() ? sign.getPrice().divide(new BigDecimal(sign.getAmount())).multiply(new BigDecimal(finalAmountPlayerHas)) : sign.getPrice()));
                             break;
                         default:
                             e.getPlayer().sendMessage(ChatColor.RED + "Economy: Error in transaction. (" + t.getResult().getStatus().toString() + ")");

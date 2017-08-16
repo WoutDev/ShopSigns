@@ -8,6 +8,7 @@ import be.woutdev.shopsigns.model.ShopSign;
 import be.woutdev.shopsigns.model.ShopSign.ShopSignType;
 import java.math.BigDecimal;
 import java.util.Iterator;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
@@ -34,6 +35,12 @@ public class PlayerInteractListener implements Listener {
                 return;
 
             Account account = EconomyAPI.getAPI().getAccount(e.getPlayer());
+
+            if (account == null)
+            {
+                Bukkit.getLogger().severe("Failed to fetch account for user " + e.getPlayer().getUniqueId() + "! Failed to handle buy/sell");
+                return;
+            }
 
             if (sign.getType() == ShopSignType.BUY) {
                 if (account.getBalance().doubleValue() < sign.getPrice().doubleValue()) {
@@ -94,11 +101,9 @@ public class PlayerInteractListener implements Listener {
                     toRemove = sign.getAmount();
                 }
 
-                Iterator<ItemStack> it = e.getPlayer().getInventory().iterator();
-
-                while(it.hasNext())
+                for(int index = 0; index < e.getPlayer().getInventory().getSize(); index++)
                 {
-                    ItemStack i = it.next();
+                    ItemStack i = e.getPlayer().getInventory().getItem(index);
 
                     if (i == null)
                         continue;
@@ -107,7 +112,7 @@ public class PlayerInteractListener implements Listener {
                     {
                         if (i.getAmount() == toRemove)
                         {
-                            e.getPlayer().getInventory().remove(i);
+                            e.getPlayer().getInventory().setItem(index, null);
                             toRemove = 0;
                             break;
                         }
@@ -119,7 +124,7 @@ public class PlayerInteractListener implements Listener {
                         }
                         else
                         {
-                            e.getPlayer().getInventory().remove(i);
+                            e.getPlayer().getInventory().setItem(index, null);
                             toRemove -= i.getAmount();
                         }
                     }

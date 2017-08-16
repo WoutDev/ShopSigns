@@ -53,8 +53,8 @@ public class SignChangeListener implements Listener
             {
                 amount = Integer.parseInt(lines[2]);
 
-                if (amount > 64)
-                    throw new NumberFormatException("int above 64");
+                if (amount > 64 || amount < 1)
+                    throw new NumberFormatException("invalid amount");
             }
             catch (NumberFormatException ex)
             {
@@ -67,6 +67,9 @@ public class SignChangeListener implements Listener
             try
             {
                 price = new BigDecimal(lines[3]);
+
+                if (price.doubleValue() < 0)
+                    throw new NumberFormatException("invalid price");
             }
             catch (NumberFormatException ex)
             {
@@ -74,6 +77,11 @@ public class SignChangeListener implements Listener
                 e.getBlock().breakNaturally();
                 return;
             }
+
+            if (type == ShopSignType.BUY)
+                e.setLine(0, ChatColor.GREEN + "[Buy]");
+            else
+                e.setLine(0, ChatColor.DARK_RED + "[Sell]");
 
             p.sendMessage(ChatColor.GREEN + "Successfully created shop sign!");
         }

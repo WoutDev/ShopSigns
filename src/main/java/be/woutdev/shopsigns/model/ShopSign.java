@@ -1,6 +1,7 @@
 package be.woutdev.shopsigns.model;
 
 import java.math.BigDecimal;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
@@ -47,11 +48,11 @@ public class ShopSign
 
         String[] lines = sign.getLines();
 
-        if (!lines[0].equalsIgnoreCase("[Buy]") &&
-            !lines[0].equalsIgnoreCase("[Sell]"))
+        if (!lines[0].equalsIgnoreCase(ChatColor.GREEN + "[Buy]") &&
+            !lines[0].equalsIgnoreCase(ChatColor.DARK_RED + "[Sell]"))
             return null;
 
-        ShopSignType type = lines[0].equalsIgnoreCase("[Buy]") ? ShopSignType.BUY : ShopSignType.SELL;
+        ShopSignType type = lines[0].equalsIgnoreCase(ChatColor.GREEN + "[Buy]") ? ShopSignType.BUY : ShopSignType.SELL;
 
         Material material = Material.matchMaterial(lines[1]);
 
@@ -63,8 +64,8 @@ public class ShopSign
         {
             amount = Integer.parseInt(lines[2]);
 
-            if (amount > 64)
-                throw new NumberFormatException("int above 64");
+            if (amount > 64 || amount < 1)
+                throw new NumberFormatException("amount invalid");
         }
         catch (NumberFormatException ex)
         {
@@ -75,6 +76,9 @@ public class ShopSign
         try
         {
             price = new BigDecimal(lines[3]);
+
+            if (price.doubleValue() < 0)
+                throw new NumberFormatException("price invalid");
         }
         catch (NumberFormatException ex)
         {
